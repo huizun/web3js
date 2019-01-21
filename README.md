@@ -145,13 +145,14 @@ Send signed transaction:
 web3.eth.accounts.signTransaction({
     to: '0xF0109fC8DF283027b6285cc889F5aA624EaC1F55',
     value: '1000000000',
-    gas: 2000000
+    gas: 2000000,
+    txType: 0
 }, '0x4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318')
 .then( function(signedData)) {
     console.log(signedData);
     /*
     signed data:
-    {
+    >{
         messageHash: '0x88cfbd7e51c7a40540b233cf68b62ad1df3e92462f1c6018d6d67eae0f3b08f5',
         v: '0x25',
         r: '0xc9cf86333bcb065d140032ecaab5d9281bde80f21b9687b3e94161de42d51895',
@@ -162,8 +163,6 @@ web3.eth.accounts.signTransaction({
     web3.eth.sendSignedTransaction(signedData.messageHash)
     .on('receipt', console.log);
 };
-/*
-receipt data:
 > {
   "status": true,
   "transactionHash": "0x9fc76417374aa880d4449a1f7f31ec597f00b1f6f3dd2d66f4c9c6c445836d8b",
@@ -177,8 +176,116 @@ receipt data:
          // logs as returned by getPastLogs, etc.
      }, ...]
 }
-*/
 ```
 
+
+### Contract
+
+New contract:
+
+```js
+var jsonInterface = [
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
+      "name": "drawings",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }, ...
+];
+
+var bytecode = "0x608060405260016010556000601155600060185560006019..."
+
+new web3.eth.Contract(jsonInterface)
+    .deploy({
+        data: bytecode,
+        arguments: args
+    })
+    .send({
+        from: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe',
+        txType: 0,
+    })
+    .on('error', function(err) {
+        console.log(err);
+    })
+    .on('receipt', function(receipt) {
+        console.log(receipt);
+    })
+    .then( contractInstance => {
+        console.log(contractInstance)
+    })
+```
+
+Call the contract:
+
+```js
+contractInstance.methods.myMethod(123).call({
+    from: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe'
+})
+.then(function(result){
+    ...
+});
+```
+
+Sends a message to the contract to change the contract state:
+
+```js
+contractInstance.methods.myMethod(123).send({
+    from: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe',
+    txType: 0
+})
+.on('transactionHash', function(hash){
+    ...
+})
+.on('confirmation', function(confirmationNumber, receipt){
+    ...
+})
+.on('receipt', function(receipt){
+    // receipt example
+    console.log(receipt);
+    > {
+        "transactionHash": "0x9fc76417374aa880d4449a1f7f31ec597f00b1f6f3dd2d66f4c9c6c445836d8b",
+        "transactionIndex": 0,
+        "blockHash": "0xef95f2f1ed3ca60b048b4bf67cde2195961e0bba6f70bcbea9a2c4e133e34b46",
+        "blockNumber": 3,
+        "contractAddress": "0x11f4d0A3c12e86B4b5F39B213F7E19D048276DAe",
+        "cumulativeGasUsed": 314159,
+        "gasUsed": 30234,
+        "events": {
+            "MyEvent": {
+                returnValues: {
+                    myIndexedParam: 20,
+                    myOtherIndexedParam: '0x123456789...',
+                    myNonIndexParam: 'My String'
+                },
+                raw: {
+                    data: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
+                    topics: ['0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7', '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385']
+                },
+                event: 'MyEvent',
+                signature: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
+                logIndex: 0,
+                transactionIndex: 0,
+                transactionHash: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
+                blockHash: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
+                blockNumber: 1234,
+                address: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe'
+            },
+            "MyOtherEvent": {
+                ...
+            },
+            "MyMultipleEvent":[{...}, {...}] // If there are multiple of the same event, they will be in an array
+        }
+    }
+})
+.on('error', console.error); // If there's an out of gas error the second parameter is the receipt.
+```
 
 More API is here [web3.js](https://web3js.readthedocs.io/en/1.0/)
