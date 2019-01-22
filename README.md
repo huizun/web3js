@@ -1,6 +1,6 @@
 # FOF Web3JS API version 0.1.0 
 
-This is the [FOF](https://github.com/huizun) compatible JavaScript API which implements the Generic JSON RPC spec as described in the Chain3.md.
+This is a [FOF](https://github.com/huizun) compliant JavaScript API that implements the common JSON RPC specification.
 
 *v0.1.0 First compatible version with FOF chain.
 
