@@ -234,7 +234,7 @@ contractInstance.methods.myMethod(123).call({
 });
 ```
 
-Sends a message to the contract to change the contract state:
+Send a message to the contract to change the contract state:
 
 ```js
 contractInstance.methods.myMethod(123).send({
@@ -287,5 +287,158 @@ contractInstance.methods.myMethod(123).send({
 })
 .on('error', console.error); // If there's an out of gas error the second parameter is the receipt.
 ```
+
+Encodes the ABI for this method. This can be used to send a transaction, call a method, or pass it into another smart contracts method as arguments:
+
+```js
+contractInstance.methods.myMethod(123).encodeABI();
+> '0x58cf5f1000000000000000000000000000000000000000000000000000000000000007B'
+```
+
+#### Get the contract logs
+
+Subscribes to an event and unsubscribes immediately after the first event or error. Will only fire for a single event:
+
+```js
+contractInstance.once('MyEvent', {
+    filter: {myIndexedParam: [20,23], myOtherIndexedParam: '0x123456789...'}, // Using an array means OR: e.g. 20 or 23
+    fromBlock: 0
+}, function(error, event){ console.log(event); });
+
+// event output example
+> {
+    returnValues: {
+        myIndexedParam: 20,
+        myOtherIndexedParam: '0x123456789...',
+        myNonIndexParam: 'My String'
+    },
+    raw: {
+        data: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
+        topics: ['0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7', '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385']
+    },
+    event: 'MyEvent',
+    signature: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
+    logIndex: 0,
+    transactionIndex: 0,
+    transactionHash: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
+    blockHash: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
+    blockNumber: 1234,
+    address: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe'
+}
+```
+
+Subscribe to an event:
+
+```js
+contractInstance.events.MyEvent({
+    filter: {myIndexedParam: [20,23], myOtherIndexedParam: '0x123456789...'}, // Using an array means OR: e.g. 20 or 23
+    fromBlock: 0
+}, function(error, event){ console.log(event); })
+.on('data', function(event){
+    console.log(event); // same results as the optional callback above
+})
+.on('changed', function(event){
+    // remove event from local database
+})
+.on('error', console.error);
+
+// event output example
+> {
+    returnValues: {
+        myIndexedParam: 20,
+        myOtherIndexedParam: '0x123456789...',
+        myNonIndexParam: 'My String'
+    },
+    raw: {
+        data: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
+        topics: ['0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7', '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385']
+    },
+    event: 'MyEvent',
+    signature: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
+    logIndex: 0,
+    transactionIndex: 0,
+    transactionHash: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
+    blockHash: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
+    blockNumber: 1234,
+    address: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe'
+}
+```
+
+All events, Same as events but receives all events from this smart contract. Optionally the filter property can filter those events:
+
+```js
+contractInstance.getPastEvents('MyEvent', {
+    filter: {myIndexedParam: [20,23], myOtherIndexedParam: '0x123456789...'}, // Using an array means OR: e.g. 20 or 23
+    fromBlock: 0,
+    toBlock: 'latest'
+}, function(error, events){ console.log(events); })
+.then(function(events){
+    console.log(events) // same results as the optional callback above
+});
+
+> [{
+    returnValues: {
+        myIndexedParam: 20,
+        myOtherIndexedParam: '0x123456789...',
+        myNonIndexParam: 'My String'
+    },
+    raw: {
+        data: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
+        topics: ['0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7', '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385']
+    },
+    event: 'MyEvent',
+    signature: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
+    logIndex: 0,
+    transactionIndex: 0,
+    transactionHash: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
+    blockHash: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
+    blockNumber: 1234,
+    address: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe'
+},{
+    ...
+}]
+```
+
+Gets past events for this contract:
+
+```js
+contractInstance.getPastEvents('MyEvent', {
+    filter: {myIndexedParam: [20,23], myOtherIndexedParam: '0x123456789...'}, // Using an array means OR: e.g. 20 or 23
+    fromBlock: 0,
+    toBlock: 'latest'
+}, function(error, events){ console.log(events); })
+.then(function(events){
+    console.log(events) // same results as the optional callback above
+});
+
+> [{
+    returnValues: {
+        myIndexedParam: 20,
+        myOtherIndexedParam: '0x123456789...',
+        myNonIndexParam: 'My String'
+    },
+    raw: {
+        data: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
+        topics: ['0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7', '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385']
+    },
+    event: 'MyEvent',
+    signature: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
+    logIndex: 0,
+    transactionIndex: 0,
+    transactionHash: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
+    blockHash: '0xfd43ade1c09fade1c0d57a7af66ab4ead7c2c2eb7b11a91ffdd57a7af66ab4ead7',
+    blockNumber: 1234,
+    address: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe'
+},{
+    ...
+}]
+```
+
+
+
+
+
+
+## Others
 
 More API is here [web3.js](https://web3js.readthedocs.io/en/1.0/)
